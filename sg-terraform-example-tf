@@ -1,0 +1,52 @@
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 3.27"
+    }
+  }
+
+  required_version = ">= 0.14.3"
+}
+
+provider "aws" {
+  profile = "default"
+  region  = "us-east-1"
+}
+
+resource "aws_security_group" "allow_nlb_con_ecs" {
+  name        = "sg_instances_nlb_ecs"
+  description = "sg_to_lab_spot_instances"
+  vpc_id      = "vpc-03a506a79fdbbbf9a"
+
+  tags = {
+    Name = "lab_spot_instances"
+  }
+}
+
+resource "aws_security_group_rule" "port_range" {
+    security_group_id = aws_security_group.allow_nlb_con_ecs.id
+    type              = "ingress"
+    from_port         = 49153
+    to_port           = 65535
+    protocol          = "tcp"
+    cidr_blocks       = ["0.0.0.0/0"]
+}
+
+resource "aws_security_group_rule" "container_port" {
+    security_group_id = aws_security_group.allow_nlb_con_ecs.id
+    type              = "ingress"
+    from_port         = 9090
+    to_port           = 9090
+    protocol          = "tcp"
+    cidr_blocks       = ["0.0.0.0/0"]
+}
+
+resource "aws_security_group_rule" "egress" {
+    security_group_id = aws_security_group.allow_nlb_con_ecs.id
+    type              = "egress"
+    from_port         = 0
+    to_port           = 0
+    protocol          = "-1"
+    cidr_blocks       = ["0.0.0.0/0"]
+}
